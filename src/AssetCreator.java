@@ -10,10 +10,7 @@ import javax.swing.filechooser.FileFilter;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.Scanner;
+import java.util.*;
 
 public class AssetCreator implements MouseListener, KeyListener {
 
@@ -28,7 +25,7 @@ public class AssetCreator implements MouseListener, KeyListener {
     BasicButton exit = null;
     File pngFile = null;
     File polygonFile = null;
-    List<Float> polygonDots = new ArrayList();
+    List<Integer> polygonDots = new ArrayList();
     Polygon polygon = null;
     Image image;
     String path = null;
@@ -40,7 +37,8 @@ public class AssetCreator implements MouseListener, KeyListener {
     int centerX = 800;
     int centerY = 450;
     boolean pngOpened;
-    boolean saved;
+    boolean saved = false;
+    boolean pointAdded = false;
     int exitButtonPressed = 0;
 
 
@@ -56,13 +54,13 @@ public class AssetCreator implements MouseListener, KeyListener {
         file.setOpenedWidth(230);
         toRender.add(file);
         file.addButton("Open texture (ctrl+n)");
-        file.addAction(0, new OpenTextureButton());
+        file.addAction(0, this::openTexture);
         file.addButton("Open asset (ctrl+o)");
-        file.addAction(1, new OpenAssetButton());
+        file.addAction(1, this::openAsset);
         file.addButton("Save (ctrl+s)");
-        file.addAction(2, new SaveButton());
+        file.addAction(2, this::save);
         file.addButton("Save as");
-        file.addAction(3, new SaveAsButton());
+        file.addAction(3, this::saveAs);
 
         edit = new CascadingMenu(80, 0, 80, 29, Color.decode("0X0079db"), Color.decode("0X42aaff"),  Color.decode("0X75c1ff"),
                 Color.decode("0X42aaff"), Color.darkGray, "Edit");
@@ -70,9 +68,9 @@ public class AssetCreator implements MouseListener, KeyListener {
         edit.setOpenedWidth(160);
         toRender.add(edit);
         edit.addButton("Undo (ctrl+z)");
-        edit.addAction(0, new UndoButton());
+        edit.addAction(0, this::undo);
         edit.addButton("Redo (ctrl+y)");
-        edit.addAction(1, new RedoButton());
+        edit.addAction(1, this::redo);
 
         view = new CascadingMenu(160, 0, 80, 29, Color.decode("0X0079db"), Color.decode("0X42aaff"),  Color.decode("0X75c1ff"),
                 Color.decode("0X42aaff"), Color.darkGray, "View");
@@ -80,9 +78,10 @@ public class AssetCreator implements MouseListener, KeyListener {
         view.setOpenedWidth(170);
         toRender.add(view);
         view.addButton("Zoom in (PgUp)");
-        view.addAction(0, new ZoomIn());
+        view.addAction(0, this::zoomIn);
         view.addButton("Zoom out (PgDn)");
-        view.addAction(1, new ZoomOut());
+        view.addAction(1, this::zoomOut);
+        view.addButton("showPolygons");
 
         instruments = new CascadingMenu(240, 0, 140, 29, Color.decode("0X0079db"), Color.decode("0X42aaff"),  Color.decode("0X75c1ff"),
                 Color.decode("0X42aaff"), Color.darkGray, "Instruments");
@@ -90,22 +89,24 @@ public class AssetCreator implements MouseListener, KeyListener {
         instruments.setOpenedWidth(155);
         toRender.add(instruments);
         instruments.addButton("Drag");
-        instruments.addAction(0, new DragButton());
+        instruments.addAction(0, ()->currentInstrument = Instruments.Drag);
         instruments.addButton("Add point");
-        instruments.addAction(1, new AddPointButton());
+        instruments.addAction(1, ()->currentInstrument = Instruments.AddPoint);
         instruments.addButton("Remove points");
-        instruments.addAction(2, new RemovePointsButton());
+        instruments.addAction(2, ()->currentInstrument = Instruments.RemovePoints);
         instruments.addButton("Drag Point");
-        instruments.addAction(3, new DragPointButton());
+        instruments.addAction(3, ()->currentInstrument = Instruments.DragPoint);
 
         exit = new BasicButton(1571, 0, 30, 29, Color.decode("0Xff496c"), Color.decode("0Xff8099"), Color.decode("0X75c1ff"),
-                Color.decode("0X75c1ff"), Color.darkGray, "X", new ExitButton());
+                Color.decode("0X75c1ff"), Color.darkGray, "X", ()->exitButtonPressed = 1);
         exit.setIndent(8);
         exit.setInput(input);
         toRender.add(exit);
     }
 
     public int update(GameContainer gameContainer, int i) {
+        if(exitButtonPressed == 1)
+            input.removeAllMouseListeners();
         return exitButtonPressed;
     }
 
@@ -118,7 +119,7 @@ public class AssetCreator implements MouseListener, KeyListener {
 
         if(pngOpened)
             renderAsset(graphics);
-        if(polygon != null && polygon.getPointCount() != 0)
+        if(/*polygon != null && polygon.getPointCount() != 0*/ polygonDots.size() > 0)
             renderPolygon(graphics);
 
         graphics.setColor(Color.decode("0X75c1ff"));
@@ -136,11 +137,14 @@ public class AssetCreator implements MouseListener, KeyListener {
 
     private void renderPolygon(Graphics graphics){
         Polygon tmp = new Polygon();
-        float[] dot;
-        for(int i = 0; i < polygon.getPointCount(); i++){
-            dot = polygon.getPoint(i);
-            tmp.addPoint(dot[0] * zoom + 100, dot[1] * zoom + 100);
+        float[] dot = new float[2];
+        for(int i = 0; i < polygonDots.size()/2; i++){
+            dot[0] = polygonDots.get(i*2);
+            dot[1] = polygonDots.get(i*2+1);
+            tmp.addPoint(dot[0] * zoom, dot[1] * zoom);
         }
+        tmp.setX(workspaceRectangle.getX());
+        tmp.setY(workspaceRectangle.getY());
         graphics.setColor(Color.green);
         graphics.draw(tmp);
     }
@@ -155,11 +159,11 @@ public class AssetCreator implements MouseListener, KeyListener {
     }
 
     private int getMouseX(){
-        return (int) ((int) ((Integer.min(Integer.max(input.getMouseX(), (int) workspaceRectangle.getX()), (int) (workspaceRectangle.getX()+workspaceRectangle.getWidth())) - workspaceRectangle.getX())) / zoom);
+        return (int) ((int) ((Integer.min(Integer.max(input.getMouseX(), (int) ((int) workspaceRectangle.getX()-(4*zoom))), (int) (workspaceRectangle.getX()+workspaceRectangle.getWidth()+(4*zoom))) - workspaceRectangle.getX())) / zoom);
     }
 
     private int getMouseY(){
-        return (int) ((int) ((Integer.min(Integer.max(input.getMouseY(), (int) workspaceRectangle.getY()), (int) (workspaceRectangle.getY()+workspaceRectangle.getHeight())) - workspaceRectangle.getY())) / zoom);
+        return (int) ((int) ((Integer.min(Integer.max(input.getMouseY(), (int) ((int) workspaceRectangle.getY()-(4*zoom))), (int) (workspaceRectangle.getY()+workspaceRectangle.getHeight()+(4*zoom))) - workspaceRectangle.getY())) / zoom);
     }
 
     @Override
@@ -176,11 +180,7 @@ public class AssetCreator implements MouseListener, KeyListener {
         if(c == 'n' && keysPressed.contains(29))
             openTexture();
         if(c == 'o' && keysPressed.contains(29)) {
-            try {
-                openAsset();
-            } catch (SlickException | FileNotFoundException e) {
-                e.printStackTrace();
-            }
+            openAsset();
         }
     }
 
@@ -225,14 +225,28 @@ public class AssetCreator implements MouseListener, KeyListener {
     public void mouseClicked(int i, int i1, int i2, int i3) {
     }
 
-    @Override
-    public void mousePressed(int i, int i1, int i2) {
-
+    private void printPolygon(){
+        for(int i = 0; i < polygonDots.size(); i++){
+            System.out.print(polygonDots.get(i) + " ");
+        }
+        System.out.print("\n");
     }
 
     @Override
-    public void mouseReleased(int i, int i1, int i2) {
+    public void mousePressed(int button, int x, int y) {
+        if(currentInstrument == Instruments.AddPoint && workspaceRectangle.contains(x, y)){
+            polygonDots.add(getMouseX());
+            polygonDots.add(getMouseY());
+            pointAdded = true;
+        }
+    }
 
+    @Override
+    public void mouseReleased(int button, int x, int y) {
+        if(currentInstrument == Instruments.AddPoint) {
+            pointAdded = false;
+            printPolygon();
+        }
     }
 
     @Override
@@ -241,8 +255,29 @@ public class AssetCreator implements MouseListener, KeyListener {
     }
 
     @Override
-    public void mouseDragged(int i, int i1, int i2, int i3) {
-
+    public void mouseDragged(int oldx, int oldy, int newx, int newy) {
+        if(currentInstrument == Instruments.Drag){
+            int xchange = newx - oldx;
+            int ychange = newy - oldy;
+            if(centerX + xchange < 200)
+                centerX = 200;
+            else if(centerX + xchange > 1400)
+                centerX = 1400;
+            else
+                centerX = centerX + xchange;
+            if(centerY + ychange < 200)
+                centerY = 200;
+            else if(centerY + ychange > 700)
+                centerY = 700;
+            else
+                centerY = centerY + ychange;
+            System.out.println("x: " + (centerX + xchange));
+            System.out.println("y: " + (centerY + ychange));
+        }
+        if(currentInstrument == Instruments.AddPoint && pointAdded){
+            polygonDots.set(polygonDots.size()-2, getMouseX());
+            polygonDots.set(polygonDots.size()-1, getMouseY());
+        }
     }
 
     private void readPolygon(File poly) throws FileNotFoundException {
@@ -295,7 +330,7 @@ public class AssetCreator implements MouseListener, KeyListener {
         polygon = new Polygon();
     }
 
-    private void openAsset() throws SlickException, FileNotFoundException {
+    private void openAsset(){
         JPanel panel = new JPanel();
         JFileChooser fileChooser = new JFileChooser();
         fileChooser.setDialogTitle("Open asset");
@@ -351,10 +386,18 @@ public class AssetCreator implements MouseListener, KeyListener {
                 }
             });
             if(png.length == 1 && poly.length == 1) {
-                image = new Image(png[0].getAbsolutePath());
+                try {
+                    image = new Image(png[0].getAbsolutePath());
+                } catch (SlickException e) {
+                    e.printStackTrace();
+                }
                 pngOpened = true;
                 polygonFile = poly[0];
-                readPolygon(polygonFile);
+                try {
+                    readPolygon(polygonFile);
+                } catch (FileNotFoundException e) {
+                    e.printStackTrace();
+                }
             }
         }
     }
@@ -362,15 +405,14 @@ public class AssetCreator implements MouseListener, KeyListener {
     private void writePolygon(File polygonFile) throws IOException {
         FileWriter fileWriter = new FileWriter(polygonFile);
         float[] point;
-        for(int i = 0; i < polygon.getPointCount(); i++){
-            point = polygon.getPoint(i);
-            fileWriter.write(((int) point[0]));
-            fileWriter.write(((int) point[1]));
-            fileWriter.write("\n");
+        for(int i = 0; i < polygonDots.size(); i++){
+            fileWriter.write(polygonDots.get(i) + " ");
+            fileWriter.write(polygonDots.get(++i) + "\n");
         }
+        fileWriter.flush();
     }
 
-    private void save() throws IOException {
+    private void save(){
         if(pngFile == null){
             System.out.println("No png");
         }
@@ -378,12 +420,16 @@ public class AssetCreator implements MouseListener, KeyListener {
             saveAs();
         else{
             polygonFile.delete();
-            polygonFile.createNewFile();
-            writePolygon(polygonFile);
+            try {
+                polygonFile.createNewFile();
+                writePolygon(polygonFile);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
     }
 
-    private void saveAs() throws IOException {
+    private void saveAs(){
         if(pngFile == null){
             System.out.println("No png");
         }
@@ -395,13 +441,17 @@ public class AssetCreator implements MouseListener, KeyListener {
 
             int canceled = fileChooser.showDialog(panel, "Save as");
             if (canceled == 0) {
-                File file = fileChooser.getSelectedFile();
-                String pathToSave = file.getAbsolutePath();
-                if (file.isDirectory() && Objects.requireNonNull(file.listFiles()).length == 0) {
-                    Files.copy(Path.of(pngFile.getAbsolutePath()), Path.of(pathToSave + "\\texture.png"));
+                try {
+                    File file = fileChooser.getSelectedFile();
+                    String pathToSave = file.getAbsolutePath();
+                    if (file.isDirectory() && Objects.requireNonNull(file.listFiles()).length == 0) {
+                        Files.copy(Path.of(pngFile.getAbsolutePath()), Path.of(pathToSave + "\\texture.png"));
+                    }
+                    File poly = new File(pathToSave + "\\polygon.txt");
+                    writePolygon(poly);
+                } catch (IOException e){
+                    e.printStackTrace();
                 }
-                File poly = new File(pathToSave + "\\polygon.txt");
-                writePolygon(poly);
             }
         }
     }
@@ -412,109 +462,5 @@ public class AssetCreator implements MouseListener, KeyListener {
 
     private void redo(){
 
-    }
-
-    private class OpenTextureButton extends ButtonAction{
-        @Override
-        public void run() {
-            openTexture();
-        }
-    }
-
-    private class OpenAssetButton extends ButtonAction{
-
-        @Override
-        public void run() {
-            try {
-                openAsset();
-            } catch (SlickException | FileNotFoundException e) {
-                e.printStackTrace();
-            }
-        }
-    }
-
-    private class SaveButton extends ButtonAction{
-        @Override
-        public void run() {
-            try {
-                save();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-    }
-
-    private class SaveAsButton extends ButtonAction{
-        @Override
-        public void run() {
-            try {
-                saveAs();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-    }
-
-    private class ZoomIn extends ButtonAction{
-        @Override
-        public void run() {
-            zoomIn();
-        }
-    }
-
-    private class ZoomOut extends ButtonAction{
-        @Override
-        public void run() {
-            zoomOut();
-        }
-    }
-
-    private class UndoButton extends ButtonAction{
-        @Override
-        public void run() {
-            undo();
-        }
-    }
-
-    private class RedoButton extends ButtonAction{
-        @Override
-        public void run() {
-            redo();
-        }
-    }
-
-    private class DragButton extends ButtonAction{
-        @Override
-        public void run() {
-            currentInstrument = Instruments.Drag;
-        }
-    }
-
-    private class AddPointButton extends ButtonAction{
-        @Override
-        public void run() {
-            currentInstrument = Instruments.AddPoint;
-        }
-    }
-
-    private class RemovePointsButton extends ButtonAction{
-        @Override
-        public void run() {
-            currentInstrument = Instruments.RemovePoints;
-        }
-    }
-
-    private class DragPointButton extends ButtonAction{
-        @Override
-        public void run() {
-            currentInstrument = Instruments.DragPoint;
-        }
-    }
-
-    private class ExitButton extends ButtonAction{
-        @Override
-        public void run() {
-            exitButtonPressed = 1;
-        }
     }
 }

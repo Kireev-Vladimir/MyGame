@@ -1,9 +1,7 @@
 import org.newdawn.slick.Color;
 import org.newdawn.slick.Graphics;
-import org.newdawn.slick.Input;
 import org.newdawn.slick.geom.Rectangle;
 
-import java.awt.*;
 import java.util.ArrayList;
 
 public class CascadingMenu extends BasicButton{
@@ -26,11 +24,20 @@ public class CascadingMenu extends BasicButton{
         buttons.add(new BasicButton(super.getX(), (int) (super.getY()+super.getHeight()+openedRectangle.getHeight()), openedWidth, super.getHeight(), super.getColorPressed(),
                     super.getColorTouched(), super.getColorUntouched(), super.getColorOutline(), super.getColorText(), str));
         openedRectangle.setHeight(openedRectangle.getHeight()+super.getHeight());
+        buttons.get(buttons.size()-1).setInput(input);
+        buttons.get(buttons.size()-1).inputEndedMy();
+        //buttons.get(buttons.size()-1).inputStarted();
     }
 
-    public void addAction(int index, ButtonAction act){
+    public void addAction(int index, Runnable act){
         buttons.get(index).act = act;
     }
+
+    /*public void stopInput(){
+        input.removeMouseListener(this);
+        for (BasicButton button: buttons)
+            button.inputEnded();
+    }*/
 
     public int isButtonPressed(){
         for(int i = 0; i < buttons.size(); i++)
@@ -73,6 +80,7 @@ public class CascadingMenu extends BasicButton{
 
     public void setOpenedWidth(int openedWidth) {
         this.openedWidth = openedWidth;
+        openedRectangle.setWidth(openedWidth);
     }
 
     public boolean isOpened(){
@@ -98,7 +106,7 @@ public class CascadingMenu extends BasicButton{
             state = State.Untouched;
             opened = false;
             for(BasicButton button: buttons)
-                input.removeMouseListener(button);
+                button.inputEndedMy();
         }
     }
 
@@ -111,19 +119,19 @@ public class CascadingMenu extends BasicButton{
                     opened = false;
                     for(BasicButton button: buttons) {
                         button.mouseReleased(mouseButton, x, y);
-                        input.removeMouseListener(button);
+                        button.inputEndedMy();
                     }
                 }
             }
             else if(rectangle.contains(x, y)){
                 opened = true;
-                for(BasicButton button: buttons)
-                    input.addMouseListener(button);
+                for (BasicButton button: buttons)
+                    button.inputStartedMy();
             }
             else {
                 opened = false;
-                for(BasicButton button: buttons)
-                    input.removeMouseListener(button);
+                for (BasicButton button: buttons)
+                    button.inputEndedMy();
                 state = State.Untouched;
             }
         }
@@ -135,5 +143,17 @@ public class CascadingMenu extends BasicButton{
         if(opened)
             for(BasicButton button: buttons)
                 button.render(graphics);
+    }
+
+    @Override
+    public void inputStartedMy() {
+        isAcceptingInput = true;
+    }
+
+    @Override
+    public void inputEndedMy() {
+        isAcceptingInput = false;
+        for (BasicButton button: buttons)
+            button.inputEnded();
     }
 }

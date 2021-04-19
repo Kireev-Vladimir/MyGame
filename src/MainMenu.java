@@ -1,9 +1,5 @@
-import org.lwjgl.Sys;
 import org.newdawn.slick.*;
-import net.java.games.input.DirectAndRawInputEnvironmentPlugin;
-import java.security.AccessController;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -32,19 +28,23 @@ public class MainMenu {
         buttons.put("settingsButton", new BasicButton(710, 630, 190, 120,
                     Color.blue, new Color(51, 51, 255), new Color(102, 102, 255), Color.black, Color.white, "Settings", new ButtonSettingsAct()));
 
-        for (Map.Entry<String, BasicButton> buttonEntry: buttons.entrySet())
+        for (Map.Entry<String, BasicButton> buttonEntry: buttons.entrySet()) {
             buttonEntry.getValue().setInput(input);
+            buttonEntry.getValue().inputStartedMy();
+        }
 
         this.container = gameContainer;
+
+        System.out.println();
     }
 
     public int update(GameContainer gameContainer, int i) throws SlickException {
-        if(state != 0)
-            input.removeAllMouseListeners();
+        //if(state != 0)
+            //input.removeAllMouseListeners();
         return state;
     }
 
-    public void render(GameContainer gameContainer, Graphics graphics) throws SlickException {
+    public void render(GameContainer gameContainer, Graphics graphics){
         graphics.setColor(Color.white);
         graphics.fillRect(0,0, 1600, 900);
         for (Map.Entry<String, BasicButton> buttonEntry: buttons.entrySet())

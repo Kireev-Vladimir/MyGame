@@ -22,7 +22,8 @@ public class BasicButton implements MouseListener, Drawable {
     protected Rectangle rectangle;
     protected State state;
     protected Input input;
-    private boolean pressed;
+    protected boolean pressed;
+    protected boolean isAcceptingInput = false;
     Runnable act;
 
     public BasicButton(int x, int y, int width, int height, Runnable act) {
@@ -310,11 +311,14 @@ public class BasicButton implements MouseListener, Drawable {
     public void setInput(Input input) {
         this.input = input;
         input.addMouseListener(this);
+        isAcceptingInput = true;
     }
+
+
 
     @Override
     public boolean isAcceptingInput() {
-        return true;
+        return isAcceptingInput;
     }
 
     @Override
@@ -325,6 +329,14 @@ public class BasicButton implements MouseListener, Drawable {
     @Override
     public void inputStarted() {
 
+    }
+
+    public void inputEndedMy() {
+        isAcceptingInput = false;
+    }
+
+    public void inputStartedMy() {
+        isAcceptingInput = true;
     }
 
     @Override

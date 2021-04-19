@@ -10,8 +10,8 @@ public class Game extends BasicGame {
     currentWindow curWindow;
     MainMenu mainMenu;
     AssetCreator assetCreator;
-    MapCreator mapCreator = new MapCreator();
-    Gamer gamer = new Gamer();
+    MapCreator mapCreator;
+    Gamer gamer;
     Input input;
 
 
@@ -35,8 +35,11 @@ public class Game extends BasicGame {
             state = mainMenu.update(gameContainer, i);
             if(state == 1)
                 curWindow = currentWindow.game;
-            else if(state == 2)
+            else if(state == 2) {
                 curWindow = currentWindow.mapCreator;
+                mapCreator = new MapCreator();
+                mapCreator.init(gameContainer);
+            }
             else if(state == 3) {
                 curWindow = currentWindow.assetCreator;
                 assetCreator = new AssetCreator();
@@ -54,8 +57,11 @@ public class Game extends BasicGame {
             }
         }
         if(curWindow == currentWindow.mapCreator){
-            if(mapCreator.update(gameContainer, i) == 1)
+            if(mapCreator.update(gameContainer, i) == 1) {
                 curWindow = currentWindow.mainMenu;
+                mainMenu = new MainMenu(input);
+                mainMenu.init(gameContainer);
+            }
         }
         if(curWindow == currentWindow.game){
             if(gamer.update(gameContainer, i) == 1)
