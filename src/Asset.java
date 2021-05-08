@@ -8,14 +8,15 @@ import org.newdawn.slick.geom.Rectangle;
 
 import javax.swing.*;
 import javax.swing.filechooser.FileFilter;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FilenameFilter;
+import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.Locale;
 import java.util.Objects;
 import java.util.Scanner;
 
 public class Asset implements MouseListener, Drawable{
-    File file;
+    String imagePath;
     Image image;
     Polygon polygon;
     Rectangle visibleRect;
@@ -40,6 +41,39 @@ public class Asset implements MouseListener, Drawable{
         posX = 0;
         posY = 0;
         camMove(camX, camY, zoom);
+    }
+
+    public Asset(File poly, File texture){
+        try {
+            imagePath = texture.getAbsolutePath();
+            image = new Image(imagePath);
+            width = image.getWidth();
+            height = image.getHeight();
+        } catch (SlickException e) {
+            e.printStackTrace();
+        }
+        createPolygon(poly);
+        dragged = false;
+    }
+
+    private void createPolygon(File poly){
+        try {
+            Scanner scanner = new Scanner(poly);
+            scanner.useLocale(Locale.US);
+            if(scanner.hasNextFloat()) {
+                posX = scanner.nextFloat();
+                posY = scanner.nextFloat();
+            }
+            float x, y;
+            polygon = new Polygon();
+            while(scanner.hasNextFloat()) {
+                x = scanner.nextFloat();
+                y = scanner.nextFloat();
+                polygon.addPoint(x, y);
+            }
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
@@ -198,7 +232,8 @@ public class Asset implements MouseListener, Drawable{
             });
             if(png.length == 1 && poly.length == 1) {
                 try {
-                    image = new Image(png[0].getAbsolutePath());
+                    imagePath = png[0].getAbsolutePath();
+                    image = new Image(imagePath);
                 } catch (SlickException e) {
                     e.printStackTrace();
                 }
@@ -219,6 +254,29 @@ public class Asset implements MouseListener, Drawable{
     }
 
     public void renderPolygon(Graphics graphics){
-        graphics.draw(visiblePolygon);
+        if(isVisible)
+            graphics.draw(visiblePolygon);
+    }
+
+    private void writePolygon(File polygonFile) throws IOException {
+        FileWriter fileWriter = new FileWriter(polygonFile);
+        fileWriter.write(posX + " " + posY + "\n");
+        float[] point;
+        for(int i = 0; i < polygon.getPointCount(); i++){
+            point = polygon.getPoint(i);
+            fileWriter.write(point[0] + " ");
+            fileWriter.write(point[1] + "\n");
+        }
+        fileWriter.flush();
+    }
+
+    public void saveAs(String polygonsPath, String texturesPath, Integer index){
+        File poly = new File(polygonsPath + "\\" + index.toString() + ".polygon");
+        try {
+            Files.copy(Path.of(imagePath), Path.of(texturesPath + "\\" + index.toString() + ".png"));
+            writePolygon(poly);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }

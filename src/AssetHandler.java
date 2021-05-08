@@ -1,11 +1,13 @@
 import org.newdawn.slick.Graphics;
 import org.newdawn.slick.Input;
 
+import java.io.File;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
 public class AssetHandler {
-    List<Asset> assets;
+    protected List<Asset> assets;
     Input input;
 
     boolean polygonsVisible;
@@ -40,5 +42,29 @@ public class AssetHandler {
                asset.render(graphics);
                asset.renderPolygon(graphics);
             }
+    }
+
+    public void saveAll(Path pathToSave){
+        String polygonsPath = pathToSave + "\\polygons";
+        String texturesPath = pathToSave + "\\textures";
+
+        new File(polygonsPath).mkdir();
+        new File(texturesPath).mkdir();
+        for(int i = 0; i <assets.size(); i++){
+            assets.get(i).saveAs(polygonsPath, texturesPath, i);
+        }
+    }
+
+    public boolean readAssets(File polygons, File textures){
+        File[] polygonFiles = polygons.listFiles();
+        File[] textureFiles = textures.listFiles();
+        if(polygonFiles.length != textureFiles.length)
+            return false;
+        for(int i = 0; i < polygonFiles.length; i++){
+            Asset asset = new Asset(polygonFiles[i], textureFiles[i]);
+            input.addMouseListener(asset);
+            assets.add(asset);
+        }
+        return true;
     }
 }

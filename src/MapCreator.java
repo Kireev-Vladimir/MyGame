@@ -7,6 +7,10 @@ import javax.swing.filechooser.FileFilter;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FilenameFilter;
+import java.io.IOException;
+import java.lang.reflect.ParameterizedType;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -55,7 +59,13 @@ public class MapCreator implements MouseListener{
         file.addButton("Add asset");
         file.addAction(2, this::addAsset);
         file.addButton("Save as");
-        file.addAction(3, this::saveAs);
+        file.addAction(3, ()-> {
+            try {
+                saveAs();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        });
 
         edit = new CascadingMenu(80, 0, 80, 29, Color.decode("0X0079db"), Color.decode("0X42aaff"),  Color.decode("0X75c1ff"),
                 Color.decode("0X42aaff"), Color.darkGray, "Edit");
@@ -150,14 +160,34 @@ public class MapCreator implements MouseListener{
             } catch (SlickException e) {
                 e.printStackTrace();
             }
+            mapWidth = backgroundImage.getWidth();
+            mapHeight = backgroundImage.getHeight();
         }
-
-        mapWidth = backgroundImage.getWidth();
-        mapHeight = backgroundImage.getHeight();
     }
 
     private void openMap(){
+        JPanel panel = new JPanel();
+        JFileChooser fileChooser = new JFileChooser();
+        fileChooser.setDialogTitle("Save as");
+        fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
 
+        int canceled = fileChooser.showDialog(panel, "Save as");
+        if(canceled == 0){
+            File file = fileChooser.getSelectedFile();
+            File[] files = file.listFiles();
+            if(files != null && files.length == 3 && files[0].getName().equals("Background.png") && files[1].getName().equals("polygons") && files[2].getName().equals("textures")){
+                backgroundFile = files[0];
+                backgroundOpened = true;
+                try {
+                    backgroundImage = new Image(backgroundFile.getAbsolutePath());
+                } catch (SlickException e) {
+                    e.printStackTrace();
+                }
+                mapWidth = backgroundImage.getWidth();
+                mapHeight = backgroundImage.getHeight();
+                assetHandler.readAssets(files[1], files[2]);
+            }
+        }
     }
 
     private void addAsset(){
@@ -168,8 +198,19 @@ public class MapCreator implements MouseListener{
 
     }
 
-    private void saveAs(){
+    private void saveAs() throws IOException {
+        JPanel panel = new JPanel();
+        JFileChooser fileChooser = new JFileChooser();
+        fileChooser.setDialogTitle("Save as");
+        fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
 
+        int canceled = fileChooser.showDialog(panel, "Save as");
+        if (canceled == 0) {
+            File file = fileChooser.getSelectedFile();
+            String pathToSave = file.getAbsolutePath();
+            Files.copy(Path.of(backgroundFile.getAbsolutePath()), Path.of(pathToSave  + "\\Background.png"));
+            assetHandler.saveAll(Path.of(pathToSave));
+        }
     }
 
     private void zoomIn(){

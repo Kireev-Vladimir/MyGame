@@ -404,7 +404,6 @@ public class AssetCreator implements MouseListener, KeyListener {
 
     private void writePolygon(File polygonFile) throws IOException {
         FileWriter fileWriter = new FileWriter(polygonFile);
-        float[] point;
         for(int i = 0; i < polygonDots.size(); i++){
             fileWriter.write(polygonDots.get(i) + " ");
             fileWriter.write(polygonDots.get(++i) + "\n");
@@ -447,7 +446,7 @@ public class AssetCreator implements MouseListener, KeyListener {
                     if (file.isDirectory() && Objects.requireNonNull(file.listFiles()).length == 0) {
                         Files.copy(Path.of(pngFile.getAbsolutePath()), Path.of(pathToSave + "\\texture.png"));
                     }
-                    File poly = new File(pathToSave + "\\polygon.txt");
+                    File poly = new File(pathToSave + "\\poly.polygon");
                     writePolygon(poly);
                 } catch (IOException e){
                     e.printStackTrace();
