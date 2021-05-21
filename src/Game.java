@@ -1,8 +1,7 @@
-import com.sun.tools.javac.Main;
+import AssetCreator.AssetCreator;
+import MapCreator.MapCreator;
+import Game.Gamer;
 import org.newdawn.slick.*;
-
-import java.util.ArrayList;
-import java.util.List;
 
 public class Game extends BasicGame {
     enum currentWindow {mainMenu, assetCreator, mapCreator, game}
@@ -33,8 +32,11 @@ public class Game extends BasicGame {
         int state = 0;
         if(curWindow == currentWindow.mainMenu){
             state = mainMenu.update(gameContainer, i);
-            if(state == 1)
+            if(state == 1) {
                 curWindow = currentWindow.game;
+                gamer = new Gamer();
+                gamer.init(gameContainer);
+            }
             else if(state == 2) {
                 curWindow = currentWindow.mapCreator;
                 mapCreator = new MapCreator();

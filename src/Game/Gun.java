@@ -1,6 +1,8 @@
+package Game;
+
 import org.newdawn.slick.Image;
 
-public class Gun {
+public abstract class Gun implements Runnable{
     Image image;
 
     int standartBulletsLoaded;
@@ -20,11 +22,14 @@ public class Gun {
     float swapTimeLeft;
     boolean isSwaped;
     boolean isHolding;
+    boolean isShooting;
     String name;
     int holderID;
     GunType type;
 
-    public void shoot(float angle){}
+    private void mainLoop(){
+
+    }
 
     public void reload(){}
 
@@ -33,5 +38,18 @@ public class Gun {
             swapTimeLeft = swapTime;
         }
         isSwaped = !isSwaped;
+    }
+
+    public void start_shooting(){
+        isShooting = true;
+    }
+
+    public void stop_shooting(){
+        isShooting = false;
+    }
+
+    @Override
+    public void run() {
+
     }
 }

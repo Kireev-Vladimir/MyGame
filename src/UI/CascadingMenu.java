@@ -1,3 +1,5 @@
+package UI;
+
 import org.newdawn.slick.Color;
 import org.newdawn.slick.Graphics;
 import org.newdawn.slick.geom.Rectangle;
@@ -35,7 +37,7 @@ public class CascadingMenu extends BasicButton{
 
     /*public void stopInput(){
         input.removeMouseListener(this);
-        for (BasicButton button: buttons)
+        for (UI.BasicButton button: buttons)
             button.inputEnded();
     }*/
 

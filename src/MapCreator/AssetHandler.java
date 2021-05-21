@@ -1,6 +1,10 @@
+package MapCreator;
+
 import org.newdawn.slick.Graphics;
 import org.newdawn.slick.Input;
+import org.newdawn.slick.geom.Rectangle;
 
+import java.awt.*;
 import java.io.File;
 import java.nio.file.Path;
 import java.util.ArrayList;

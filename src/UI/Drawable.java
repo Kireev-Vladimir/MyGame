@@ -1,3 +1,5 @@
+package UI;
+
 import org.newdawn.slick.Graphics;
 
 public interface Drawable {

@@ -1,19 +1,18 @@
+package MapCreator;
+
+import UI.BasicButton;
+import UI.CascadingMenu;
+import UI.Drawable;
 import org.newdawn.slick.*;
-import org.newdawn.slick.geom.Polygon;
-import org.newdawn.slick.gui.AbstractComponent;
 
 import javax.swing.*;
 import javax.swing.filechooser.FileFilter;
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FilenameFilter;
 import java.io.IOException;
-import java.lang.reflect.ParameterizedType;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 public class MapCreator implements MouseListener{
 
@@ -120,7 +119,7 @@ public class MapCreator implements MouseListener{
         graphics.setBackground(Color.white);
 
         if(backgroundOpened)
-            backgroundImage.draw(-camX * zoom, (-camY + 30) * zoom, zoom);
+            backgroundImage.draw(-camX * zoom, (-camY) * zoom, zoom);
 
         assetHandler.render(graphics);
 

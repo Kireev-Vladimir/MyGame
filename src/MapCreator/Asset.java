@@ -1,3 +1,6 @@
+package MapCreator;
+
+import UI.Drawable;
 import org.newdawn.slick.Graphics;
 import org.newdawn.slick.Image;
 import org.newdawn.slick.Input;
@@ -15,7 +18,7 @@ import java.util.Locale;
 import java.util.Objects;
 import java.util.Scanner;
 
-public class Asset implements MouseListener, Drawable{
+public class Asset implements MouseListener, Drawable {
     String imagePath;
     Image image;
     Polygon polygon;

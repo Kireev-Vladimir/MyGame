@@ -1,3 +1,5 @@
+package Game;
+
 public enum GunType {
     PISTOL, MELEE, SMG, AR, SR, SG, DMR;
 

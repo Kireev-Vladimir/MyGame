@@ -1,3 +1,5 @@
+import UI.BasicButton;
+import UI.ButtonAction;
 import org.newdawn.slick.*;
 
 import java.util.HashMap;
@@ -6,7 +8,7 @@ import java.util.Map;
 public class MainMenu {
 
     HashMap<String, BasicButton> buttons = new HashMap<>();
-    //HashMap<String, CascadingMenu> cascades = new HashMap<>();
+    //HashMap<String, UI.CascadingMenu> cascades = new HashMap<>();
     Input input;
     GameContainer container;
     int state = 0;
@@ -75,7 +77,7 @@ public class MainMenu {
         }
     }
 
-    class ButtonLeaveAct extends ButtonAction{
+    class ButtonLeaveAct extends ButtonAction {
 
         @Override
         public void run() {

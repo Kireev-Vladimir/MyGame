@@ -1,24 +1,24 @@
+package Game;
+
+import UI.Drawable;
 import org.newdawn.slick.Graphics;
 
-import java.util.Timer;
-
-class Thr extends Thread{
-    @Override
-    public void run() {
-        super.run();
-    }
-}
-
 public abstract class Entity implements Drawable {
-    Timer timer;
-    float posX;
-    float posY;
+    double posX;
+    double posY;
     Sprite sprite;
-    float visibleX;
-    float visibleY;
+    double visibleX;
+    double visibleY;
     boolean isVisible;
 
-    public void camMove(int camX, int camY){
+    public Entity() {
+        this.posX = 100;
+        this.posY = 100;
+        this.sprite = new Sprite("C:\\Users\\Я\\Desktop\\player.png", 2);
+        //camMove(0, 0);
+    }
+
+    /*public void camMove(int camX, int camY){
         visibleX = posX - camX;
         visibleY = posY - camY;
 
@@ -27,10 +27,13 @@ public abstract class Entity implements Drawable {
         boolean isVisibleY = (visibleY >= 0 && visibleY <= 900) ||
                 (visibleY + sprite.getHeigth() >= 0 && visibleY + sprite.getHeigth() <= 900);
         isVisible = isVisibleX && isVisibleY;
-    }
+    }*/
 
     @Override
     public void render(Graphics graphics) {
-        sprite.render(graphics, visibleX, visibleY);
+        //camMove(0, 0);
+        sprite.render(graphics, 780, 420);
+        graphics.drawString(Double.toString(posX), 1500, 20);
+        graphics.drawString(Double.toString(posY), 1500, 40);
     }
 }
