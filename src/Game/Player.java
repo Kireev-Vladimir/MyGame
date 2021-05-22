@@ -1,5 +1,8 @@
 package Game;
 
+import Game.Guns.Ak47;
+import Game.Guns.Usp;
+import org.newdawn.slick.Graphics;
 import org.newdawn.slick.Input;
 import org.newdawn.slick.KeyListener;
 import org.newdawn.slick.MouseListener;
@@ -13,7 +16,18 @@ public class Player extends BasicPlayer implements KeyListener, MouseListener {
         this.input = input;
         input.addMouseListener(this);
         input.addKeyListener(this);
-        //inputStarted();
+        inputStarted();
+        guns[0] = new Ak47();
+        gunNum = 0;
+        gunThreads[0] = new Thread(guns[0]);
+        gunThreads[0].setDaemon(true);
+        gunThreads[0].start();
+        guns[0].swap();
+        guns[1] = new Usp();
+        gunNum = 1;
+        gunThreads[1] = new Thread(guns[1]);
+        gunThreads[1].setDaemon(true);
+        gunThreads[1].start();
     }
 
     @Override
@@ -26,10 +40,12 @@ public class Player extends BasicPlayer implements KeyListener, MouseListener {
         else if(c == 'w' || c == ' ')
             jump();
         if(c >= '1' && c <= '4'){
-            if(guns[c - '1'] != null){
-                guns[gunNum].swap();
-                gunNum = c - '1';
-                guns[gunNum].swap();
+            if(guns[c - '1'] != null && c - '1' != gunNum){
+                synchronized (this){
+                    guns[gunNum].swap();
+                    gunNum = c - '1';
+                    guns[gunNum].swap();
+                }
             }
         }
         else if(c == 'r'){
@@ -56,7 +72,7 @@ public class Player extends BasicPlayer implements KeyListener, MouseListener {
 
     @Override
     public boolean isAcceptingInput() {
-        return true;
+        return acceptingInput;
     }
 
     @Override
@@ -81,25 +97,36 @@ public class Player extends BasicPlayer implements KeyListener, MouseListener {
 
     @Override
     public void mousePressed(int i, int i1, int i2) {
-        //guns[gunNum].start_shooting();
+        if(i == 0)
+            guns[gunNum].start_shooting();
     }
 
     @Override
     public void mouseReleased(int i, int i1, int i2) {
-        //guns[gunNum].stop_shooting();
+        if(i == 0)
+            guns[gunNum].stop_shooting();
     }
 
     @Override
     public void mouseMoved(int i, int i1, int x, int y) {
         mousePos.x = x;
         mousePos.y = y;
-        //crosshair.x = (int) (x + posX - 780);
-        //crosshair.y = (int) (y + posY - 420);
     }
 
     @Override
     public void mouseDragged(int i, int i1, int x, int y) {
         mousePos.x = x;
         mousePos.y = y;
+    }
+
+    public void shoot(float dmg){
+        System.out.println("Boom!");
+    }
+
+    @Override
+    public void render(Graphics graphics) {
+        super.render(graphics);
+        if(guns[gunNum] != null)
+            guns[gunNum].drawInfo(graphics);
     }
 }

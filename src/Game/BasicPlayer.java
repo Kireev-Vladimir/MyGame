@@ -1,5 +1,6 @@
 package Game;
 
+import Game.Guns.Gun;
 import org.newdawn.slick.Graphics;
 
 import java.awt.*;
@@ -19,11 +20,19 @@ public class BasicPlayer extends Entity implements Runnable{
     double speedX;
     double speedY;
     double accelerationX;
-    double accelerationY;
     long lastTime;
     boolean alive;
     Point mousePos;
     Point crosshair;
+
+    boolean isCrouched;
+
+    int money;
+    String name;
+
+    Gun[] guns = new Gun[4];
+    int gunNum;
+    Thread[] gunThreads = new Thread[4];
 
     public BasicPlayer(){
         super();
@@ -40,14 +49,6 @@ public class BasicPlayer extends Entity implements Runnable{
         hp = 100;
         armor = 0;
     }
-
-    boolean isCrouched;
-
-    int money;
-    String name;
-
-    Gun[] guns = new Gun[4];
-    int gunNum;
 
     protected void mainLoop(){
         lastTime = System.nanoTime();

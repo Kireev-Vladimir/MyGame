@@ -17,7 +17,7 @@ public class Gamer {
     static GameAssetHandler assetHandler;
     static float gravity = 0.001f;
     static BasicPlayer players;
-    static Player player;
+    static public Player player;
     static float camX = 0;
     static float camY = 0;
     Image backgroundImage;
